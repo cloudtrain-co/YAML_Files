@@ -1,0 +1,202 @@
+---
+#Create project
+apiVersion: project.openshift.io/v1
+kind: Project
+metadata:
+  name: httpd-test
+---
+#Deployment.yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: httpd-red
+  namespace: httpd-test
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: httpd-red
+  template:
+    metadata:
+      labels:
+        app: httpd-red
+    spec:
+      containers:
+      - name: httpd
+        image: registry.redhat.io/rhscl/httpd-24-rhel7
+        ports:
+        - containerPort: 8080
+        volumeMounts:
+        - name: html-volume
+          mountPath: /opt/rh/httpd24/root/var/www/html/
+      volumes:
+      - name: html-volume
+        configMap:
+          name: httpd-html
+      #securityContext:
+      #  runAsUser: 1000
+---
+#Create configmap
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: httpd-html
+  namespace: httpd-test
+data:
+  index.html: |
+    <!DOCTYPE html>
+    <html lang="en">
+    <head>
+      <meta charset="UTF-8">
+      <meta name="viewport" content="width=device-width, initial-scale=1.0">
+      <title>DO280-Openshift Training</title>
+      <style>
+        * {
+          margin: 0;
+          padding: 0;
+          box-sizing: border-box;
+        }
+
+        body {
+          font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+          background: linear-gradient(to bottom right, #cc0000, #660000);
+          color: #fff;
+          min-height: 100vh;
+          display: flex;
+          flex-direction: column;
+        }
+
+        header {
+          background-color: rgba(0, 0, 0, 0.2);
+          padding: 1em 2em;
+          text-align: center;
+          font-size: 1.5em;
+          font-weight: bold;
+          border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        nav {
+          display: flex;
+          justify-content: center;
+          gap: 2em;
+          padding: 1em;
+          background-color: rgba(0, 0, 0, 0.15);
+        }
+
+        nav a {
+          color: #fff;
+          text-decoration: none;
+          font-weight: 500;
+          transition: color 0.3s;
+        }
+
+        nav a:hover {
+          color: #ffd700;
+        }
+
+        main {
+          flex: 1;
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+          justify-content: center;
+          padding: 3em 2em;
+          text-align: center;
+        }
+
+        h1 {
+          font-size: 3em;
+          margin-bottom: 0.5em;
+        }
+
+        p {
+          font-size: 1.3em;
+          max-width: 600px;
+          line-height: 1.6;
+        }
+
+        .scrolling-text {
+          margin-top: 2em;
+          white-space: nowrap;
+          overflow: hidden;
+          width: 100%;
+          position: relative;
+        }
+
+        .scrolling-text span {
+          display: inline-block;
+          padding-left: 100%;
+          animation: scroll-left 15s linear infinite;
+        }
+
+        @keyframes scroll-left {
+          0% {
+            transform: translateX(0);
+          }
+          100% {
+            transform: translateX(-100%);
+          }
+        }
+
+        footer {
+          background-color: rgba(0, 0, 0, 0.2);
+          text-align: center;
+          padding: 1em;
+          font-size: 0.9em;
+        }
+      </style>
+    </head>
+    <body>
+      <header>Openshift Training</header>
+      <nav>
+        <a href="#">Home</a>
+        <a href="#">About</a>
+        <a href="#">Contact</a>
+      </nav>
+      <main>
+        <h1>DO280 - OpenShift Administration II</h1>
+        <h2>Hands-on, Real-world OpenShift Training</h2>
+        <p>Become an expert in OpenShift with our in-depth DO280 course.
+          Learn how to manage, configure, and operate OpenShift clusters in real-world scenarios.
+          Get your hands dirty with live practicals and deep Kubernetes insights.</p>
+        <div class="scrolling-text">
+          <span>🎓 Enroll now for the next batch! Contact +91-9975143607 or email us at cloudtrain.co@gmail.com . 🎯</span>
+        </div>
+      </main>
+      <footer>
+        &copy; Happy Learning.
+      </footer>
+    </body>
+    </html>
+
+---
+#Create service
+apiVersion: v1
+kind: Service
+metadata:
+  name: httpd-red-service
+  namespace: httpd-test
+spec:
+  selector:
+    app: httpd-red
+  ports:
+  - protocol: TCP
+    port: 80
+    targetPort: 8080
+  type: ClusterIP
+---
+#Create route
+apiVersion: route.openshift.io/v1
+kind: Route
+metadata:
+  name: httpd-red-service
+  namespace: httpd-test
+spec:
+  port:
+    targetPort: 8080
+  to:
+    kind: Service
+    name: httpd-red-service
+    weight: 100
+  wildcardPolicy: None
+...
