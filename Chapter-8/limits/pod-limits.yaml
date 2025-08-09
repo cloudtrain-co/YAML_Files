@@ -1,0 +1,13 @@
+apiVersion: v1
+kind: LimitRange
+metadata:
+  name: pod-limits
+spec:
+  limits:
+  - type: Pod
+    max:
+      cpu: "2"          # Max total CPU for the whole pod
+      memory: 2Gi       # Max total memory for the whole pod
+    min:
+      cpu: 200m         # Min total CPU for the whole pod
+      memory: 256Mi     # Min total memory for the whole pod
