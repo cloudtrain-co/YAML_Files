@@ -1,0 +1,143 @@
+#application_cpu_and_memory_limits_with_hpa
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: httpd-html
+data:
+  index.html: |
+    <html>
+      <head><title>Red Page</title></head>
+      <body style="background-color:red;">
+        <h1 style="color:white;">Welcome to the Red Page!</h1>
+      </body>
+    </html>
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: httpd-red
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: httpd-red
+  template:
+    metadata:
+      labels:
+        app: httpd-red
+    spec:
+      containers:
+      - name: httpd
+        image: registry.redhat.io/rhscl/httpd-24-rhel7
+        ports:
+        - containerPort: 8080
+        resources:
+          requests:
+            cpu: "0.1"      # Reserve 0.1 CPU core (100m)
+            memory: "128Mi" # Reserve 128MB RAM
+          limits:
+            cpu: "0.5"      # Max 0.5 CPU core
+            memory: "512Mi" # Max 512MB RAM
+        startupProbe:
+          httpGet:
+            path: /
+            port: 8080
+          failureThreshold: 30
+          periodSeconds: 10
+        readinessProbe:
+          httpGet:
+            path: /
+            port: 8080
+          initialDelaySeconds: 5
+          periodSeconds: 5
+          failureThreshold: 3
+        livenessProbe:
+          httpGet:
+            path: /
+            port: 8080
+          initialDelaySeconds: 15
+          periodSeconds: 10
+          failureThreshold: 3
+        volumeMounts:
+        - name: html-volume
+          mountPath: /var/www/html/  # Changed mount path
+      volumes:
+      - name: html-volume
+        configMap:
+          name: httpd-html
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: httpd-red-service
+spec:
+  selector:
+    app: httpd-red
+  ports:
+  - protocol: TCP
+    port: 8080  # Changed to match containerPort
+    targetPort: 8080
+  type: ClusterIP
+---
+apiVersion: route.openshift.io/v1
+kind: Route
+metadata:
+  name: httpd-red-service
+spec:
+  port:
+    targetPort: 8080
+  to:
+    kind: Service
+    name: httpd-red-service
+    weight: 100
+  wildcardPolicy: None
+---
+#HPA
+apiVersion: autoscaling/v2
+kind: HorizontalPodAutoscaler
+metadata:
+  name: httpd-red-hpa
+spec:
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: httpd-red
+  minReplicas: 2
+  maxReplicas: 5
+  metrics:
+  - type: Resource
+    resource:
+      name: cpu
+      target:
+        type: Utilization
+        averageUtilization: 50  # Scale if CPU > 50%
+  - type: Resource
+    resource:
+      name: memory
+      target:
+        type: Utilization
+        averageUtilization: 70  # Scale if Memory > 70%
+---
+#Load-Generator deployment
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: load-generator
+spec:
+  replicas: 5
+  selector:
+    matchLabels:
+      app: load-generator
+  template:
+    metadata:
+      labels:
+        app: load-generator
+    spec:
+      containers:
+      - name: busybox
+        image: busybox
+        command: ["/bin/sh", "-c"]
+        args:
+          - "while true; do wget -q -O- http://httpd-red-service:8080; done"
+...
