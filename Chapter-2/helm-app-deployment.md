@@ -1,6 +1,6 @@
 ```bash
 oc new-project helm-app
-helm repo add 	bitnami https://charts.bitnami.com/bitnami
+helm repo add bitnami https://charts.bitnami.com/bitnami
 helm list
 helm repo update
 ```
