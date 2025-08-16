@@ -1,0 +1,102 @@
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: blue-green-strategy
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: online-shop-blue
+  namespace: blue-green-strategy
+  labels:
+    app: online-shop
+    version: blue
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: online-shop
+      version: blue
+  template:
+    metadata:
+      labels:
+        app: online-shop
+        version: blue
+    spec:
+      containers:
+      - name: online-shop
+        image: cloudtrain707/shop_with_footer_v1
+        ports:
+        - containerPort: 3000
+        resources:
+          limits:
+            cpu: "500m"
+            memory: "512Mi"
+          requests:
+            cpu: "200m"
+            memory: "256Mi"
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: online-shop-green
+  namespace: blue-green-strategy
+  labels:
+    app: online-shop
+    version: green
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: online-shop
+      version: green
+  template:
+    metadata:
+      labels:
+        app: online-shop
+        version: green
+    spec:
+      containers:
+      - name: online-shop
+        image: cloudtrain707/shop_no_footer_v1
+        ports:
+        - containerPort: 3000
+        resources:
+          limits:
+            cpu: "500m"
+            memory: "512Mi"
+          requests:
+            cpu: "200m"
+            memory: "256Mi"
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: online-shop-service
+  namespace: blue-green-strategy
+spec:
+  selector:
+    app: online-shop
+    version: blue  # Change this to "green" to switch traffic to the green deployment
+  type: ClusterIP
+  ports:
+    - protocol: TCP
+      port: 3000
+      targetPort: 3000
+---
+apiVersion: route.openshift.io/v1
+kind: Route
+metadata:
+  name: online-shop-route
+  namespace: blue-green-strategy
+spec:
+  host: online-shop-bluegreen.apps-crc.testing
+  port:
+    targetPort: 3000
+  to:
+    kind: Service
+    name: online-shop-service
+    weight: 100
+  wildcardPolicy: None
+  ...
