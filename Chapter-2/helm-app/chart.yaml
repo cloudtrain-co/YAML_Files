@@ -1,0 +1,5 @@
+apiVersion: v2
+name: online-shop
+description: A Helm chart for Online Shop application with rolling update strategy
+version: 0.1.0
+appVersion: 1.0.0
