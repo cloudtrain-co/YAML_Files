@@ -12,14 +12,9 @@ helm repo update
    ```
 ### 2. Chart Structure
 Here's the complete structure we'll create:
-online-shop/
-├── Chart.yaml
-├── values.yaml
-└── templates/
-    ├── namespace.yaml
-    ├── deployment.yaml
-    ├── service.yaml
-    └── route.yaml
+<img width="170" height="193" alt="image" src="https://github.com/user-attachments/assets/53a4e181-cebd-4576-a0d9-26711ee426bd" />
+
+
 ```bash
 cd online-shop/templates/
 touch {namespace,deployment,service,route}.yaml
