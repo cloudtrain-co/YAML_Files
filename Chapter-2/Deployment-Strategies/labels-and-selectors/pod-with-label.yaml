@@ -1,0 +1,16 @@
+---
+apiVersion: v1
+kind: Pod
+metadata:
+  name: my-pod
+  labels:
+    app: my-app
+    env: dev
+    tier: fronted
+spec:
+  containers:
+  - name: app-container
+    image: bitnami/apache:latest
+    ports:
+    - containerPort: 80
+...
