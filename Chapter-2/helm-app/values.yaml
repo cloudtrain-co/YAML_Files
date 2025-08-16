@@ -1,0 +1,40 @@
+namespace: rolling-update-strategy
+
+deployment:
+  name: online-shop
+  image: amitabhdevops/online_shop
+  replicas: 2
+  strategy:
+    type: RollingUpdate
+    maxSurge: 10%
+    maxUnavailable: 10%
+  resources:
+    limits:
+      cpu: "500m"
+      memory: "512Mi"
+    requests:
+      cpu: "200m"
+      memory: "256Mi"
+
+service:
+  name: recreate-service
+  port: 3000
+  targetPort: 3000
+  type: ClusterIP
+
+route:
+  name: recreate-route
+  host: recreate-service-recreate-ns.apps-crc.testing
+  targetPort: 3000
+  wildcardPolicy: None
+
+serviceAccount:
+  create: false  # Set to true if you need a ServiceAccount
+  name: ""
+
+autoscaling:
+  enabled: true
+  minReplicas: 2
+  maxReplicas: 5
+  targetCPUUtilizationPercentage: 80
+  targetMemoryUtilizationPercentage: 80
