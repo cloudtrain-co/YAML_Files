@@ -1,6 +1,8 @@
 
 ````markdown
 # OpenShift CRC Setup Guide
+Download CRC from below URL:
+https://developers.redhat.com/content-gateway/rest/mirror/pub/openshift-v4/clients/crc/2.51.0
 
 This guide provides useful commands and configuration options for setting up and
 customizing your local OpenShift Cluster using CodeReady Containers (CRC).
