@@ -1,0 +1,65 @@
+---
+kind: Namespace
+apiVersion: v1
+metadata:
+  name: recreate-strategy
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: online-shop
+  namespace: recreate-strategy
+  labels:
+    app: online-shop
+spec:
+  replicas: 2
+  strategy:
+    type: Recreate
+  selector:
+    matchLabels:
+      app: online-shop
+  template:
+    metadata:
+      labels:
+        app: online-shop
+    spec:
+      containers:
+      - image: cloudtrain707/shop_with_footer_v1  #cloudtrain707/shop_no_footer_v1
+        name: online-shop
+        resources:
+          limits:
+            cpu: "500m"
+            memory: "512Mi"
+          requests:
+            cpu: "200m"
+            memory: "256Mi"
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: recreate-service
+  namespace: recreate-strategy
+spec:
+  selector:
+    app: online-shop
+  type: ClusterIP
+  ports:
+    - protocol: TCP
+      port: 3000
+      targetPort: 3000
+---
+apiVersion: route.openshift.io/v1
+kind: Route
+metadata:
+  name: recreate-route
+  namespace: recreate-strategy
+spec:
+  host: recreate-service-recreate-ns.apps-crc.testing
+  port:
+    targetPort: 3000
+  to:
+    kind: Service
+    name: recreate-service
+    weight: 100
+  wildcardPolicy: None
+...
