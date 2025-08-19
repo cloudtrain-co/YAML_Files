@@ -86,6 +86,8 @@ helm plugin uninstall <plugin>      # Uninstall a plugin
 ```
 
 
+### Helm install k8s objects in following order
+<img width="1205" height="995" alt="image" src="https://github.com/user-attachments/assets/ef6c0c01-8e38-4514-81c9-1c6b1cde1641" />
 
 
 
